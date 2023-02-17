@@ -51,7 +51,7 @@ static void my_timer_cb(void *arg) {
 
     LOG(LL_INFO, ("PICC type: "));
     MFRC522::PICC_Type piccType = rfid.PICC_GetType(rfid.uid.sak);
-//    Serial.println(rfid.PICC_GetTypeName(piccType));
+//    LOG(LL_INFO, (rfid.PICC_GetTypeName(piccType)));
 
     // Check is the PICC of Classic MIFARE type
     if (
@@ -101,6 +101,7 @@ static void my_timer_cb(void *arg) {
 enum mgos_app_init_result mgos_app_init(void) {
     SPI.begin(); // Init SPI bus
     rfid.PCD_Init(); // Init MFRC522
+    rfid.PCD_SetAntennaGain(MFRC522::RxGain_max)
 
     for (byte i = 0; i < 6; i++) {
         key.keyByte[i] = 0xFF;
