@@ -6,6 +6,7 @@
 
 #include <Arduino.h>
 #include "../includes/MFRC522.h"
+#include "mgos.h"
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Functions for setting up the Arduino
@@ -1933,6 +1934,7 @@ bool MFRC522::PICC_IsNewCardPresent() {
 	PCD_WriteRegister(ModWidthReg, 0x26);
 
 	MFRC522::StatusCode result = PICC_RequestA(bufferATQA, &bufferSize);
+
 	return (result == STATUS_OK || result == STATUS_COLLISION);
 } // End PICC_IsNewCardPresent()
 
