@@ -2,6 +2,7 @@
 
 #include "mgos.h"
 #include "mgos_timers.h"
+#include "mgos_http_client.h"
 
 #include <SPI.h>
 #include "../includes/MFRC522.h"
@@ -16,23 +17,70 @@ MFRC522::MIFARE_Key key;
 // Init array that will store new NUID
 byte nuidPICC[4];
 
+void logFlashString(const __FlashStringHelper *str) {
+    char buf[strlen_P((PGM_P)str) + 1];
+    strcpy_P(buf, (PGM_P)str);
+    LOG(LL_INFO, ("%.*s", strlen(buf), buf));
+}
+
 /**
  * Helper routine to dump a byte array as hex values to Serial.
  */
 void printHex(byte *buffer, byte bufferSize) {
-    for (byte i = 0; i < bufferSize; i++) {
-        LOG(LL_INFO, (buffer[i] < 0x10 ? " 0" : " "));
-        LOG(LL_INFO, ("%x", buffer[i]));
+    // Convert byte buffer to hexadecimal string
+    char hexString[bufferSize * 3 + 1];
+
+    for (int i = 0; i < bufferSize; i++) {
+        sprintf(&hexString[i * 2], "%02x ", buffer[i]);
     }
+
+    hexString[bufferSize * 3] = '\0';
+
+    // Print hexadecimal string using LOG function
+    LOG(LL_INFO, ("%s", hexString));
 }
 
 /**
  * Helper routine to dump a byte array as dec values to Serial.
  */
 void printDec(byte *buffer, byte bufferSize) {
-    for (byte i = 0; i < bufferSize; i++) {
-        LOG(LL_INFO, ("%d", buffer[i]));
+    // Convert byte buffer to decimal string
+    char decimalString[bufferSize * 4 + 1];
+
+    for (int i = 0; i < bufferSize; i++) {
+        sprintf(&decimalString[i * 2], "%d ", buffer[i]);
     }
+
+    decimalString[bufferSize * 3] = '\0';
+
+    // Print hexadecimal string using LOG function
+    LOG(LL_INFO, ("%s", decimalString));
+}
+
+static void http_cb(struct mg_connection *c, int ev, void *p, void *user_data) {
+    struct http_message *hm = (struct http_message *) p;
+
+    switch (ev) {
+        case MG_EV_HTTP_REPLY:
+            LOG(LL_INFO, ("HTTP reply status: %.*s", hm->resp_status_msg.len, hm->resp_status_msg.p));
+            LOG(LL_INFO, ("HTTP reply content: %.*s", hm->body.len, hm->body.p));
+            break;
+        case MG_EV_CLOSE:
+            *(int *) user_data = 1;
+            break;
+    }
+}
+
+void sendHttpRequest() {
+    struct mg_connection *nc = mg_connect_http("http://192.168.0.67/rpc/Switch.Set?id=0&on=true", "80", http_cb, &nc, NULL);
+
+    if (nc == NULL) {
+        LOG(LL_ERROR, ("Failed to connect to server"));
+        return;
+    }
+
+    char *message = "Hello, server!";
+    mg_printf(nc, "GET /post HTTP/1.0\r\nContent-Length: %d\r\n\r\n%s", strlen(message), message);
 }
 
 static void my_timer_cb(void *arg) {
@@ -51,7 +99,7 @@ static void my_timer_cb(void *arg) {
 
     LOG(LL_INFO, ("PICC type: "));
     MFRC522::PICC_Type piccType = rfid.PICC_GetType(rfid.uid.sak);
-//    LOG(LL_INFO, (rfid.PICC_GetTypeName(piccType)));
+    logFlashString(rfid.PICC_GetTypeName(piccType));
 
     // Check is the PICC of Classic MIFARE type
     if (
