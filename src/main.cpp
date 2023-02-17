@@ -101,7 +101,7 @@ static void my_timer_cb(void *arg) {
 enum mgos_app_init_result mgos_app_init(void) {
     SPI.begin(); // Init SPI bus
     rfid.PCD_Init(); // Init MFRC522
-    rfid.PCD_SetAntennaGain(MFRC522::RxGain_max)
+    rfid.PCD_SetAntennaGain(MFRC522::RxGain_max);
 
     for (byte i = 0; i < 6; i++) {
         key.keyByte[i] = 0xFF;
