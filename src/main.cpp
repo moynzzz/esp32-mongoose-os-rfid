@@ -1,12 +1,5 @@
 #include "../includes/main.h"
 
-#include "mgos.h"
-#include "mgos_timers.h"
-#include "mgos_http_client.h"
-
-#include <SPI.h>
-#include "../includes/MFRC522.h"
-
 #define SS_PIN 5 // ESP32 pin GIOP5
 #define RST_PIN 27 // ESP32 pin GIOP27
 
@@ -55,32 +48,6 @@ void printDec(byte *buffer, byte bufferSize) {
 
     // Print hexadecimal string using LOG function
     LOG(LL_INFO, ("%s", decimalString));
-}
-
-static void http_cb(struct mg_connection *c, int ev, void *p, void *user_data) {
-    struct http_message *hm = (struct http_message *) p;
-
-    switch (ev) {
-        case MG_EV_HTTP_REPLY:
-            LOG(LL_INFO, ("HTTP reply status: %.*s", hm->resp_status_msg.len, hm->resp_status_msg.p));
-            LOG(LL_INFO, ("HTTP reply content: %.*s", hm->body.len, hm->body.p));
-            break;
-        case MG_EV_CLOSE:
-            *(int *) user_data = 1;
-            break;
-    }
-}
-
-void sendHttpRequest() {
-    struct mg_connection *nc = mg_connect_http("http://192.168.0.67/rpc/Switch.Set?id=0&on=true", "80", http_cb, &nc, NULL);
-
-    if (nc == NULL) {
-        LOG(LL_ERROR, ("Failed to connect to server"));
-        return;
-    }
-
-    char *message = "Hello, server!";
-    mg_printf(nc, "GET /post HTTP/1.0\r\nContent-Length: %d\r\n\r\n%s", strlen(message), message);
 }
 
 static void my_timer_cb(void *arg) {
@@ -143,7 +110,33 @@ static void my_timer_cb(void *arg) {
     // Stop encryption on PCD
     rfid.PCD_StopCrypto1();
 
+    turnOnRelay();
+
     (void) arg;
+}
+
+//static const char *s_url = "http://192.168.0.67/rpc/Switch.Set?id=0&on=true";
+static const char *s_url = "http://192.168.0.51/light/0?turn=on";
+
+//static void fn(struct mg_connection *c, int ev, void *ev_data, void *fn_data) {
+//    if (ev == MG_EV_CONNECT) {
+    //        struct mg_str host = mg_url_host(s_url);
+//        // Send request
+//        mg_printf(c,
+//                  "GET %s HTTP/1.0\r\n"
+//                  "Host: %.*s\r\n"
+//                  "\r\n",
+//                  mg_url_uri(s_url), (int) host.len, host.ptr);
+//    } if (ev == MG_EV_HTTP_MSG) {
+//        struct mg_http_message *hm = (struct mg_http_message *) ev_data;
+//        LOG(LL_INFO, ("%.*s", (int) hm->message.len, hm->message.ptr));
+//    }
+//}
+
+static void turnOnRelay(void) {
+    return;
+//    mg_http_connect(mgos_get_mgr(), s_url, fn, NULL);
+//    mg_connect_http(mgos_get_mgr(), NULL, NULL, s_url, NULL, NULL);
 }
 
 enum mgos_app_init_result mgos_app_init(void) {

@@ -1,5 +1,5 @@
 author: mongoose-os
-description: A JS-enabled demo Mongoose OS firmware
+description: Custom application that uses an RFID reader to read a card and do something based on the data.
 # arch: PLATFORM
 version: 1.0
 manifest_version: 2017-05-18
@@ -48,6 +48,8 @@ libs:
   - location: https://github.com/mongoose-os-libs/arduino-compat
   - location: https://github.com/mongoose-os-libs/arduino-spi
   - location: https://github.com/mongoose-os-libs/arduino-wire
+
+  - location: https://github.com/mongoose-os-libs/mongoose
 
 conds:
   - when: mos.platform == "esp32"
